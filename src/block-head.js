@@ -19,7 +19,122 @@ LANDMARK_RIGHT_EYE_TOP = 386
 LANDMARK_RIGHT_EYE_BOTTOM = 374
 LANDMARK_RIGHT_EYEBROW = 296
 
+// used in working.
+const BH = {}
+BH.vectorA = new THREE.Vector3()
+BH.vectorB = new THREE.Vector3()
+BH.vectorC = new THREE.Vector3()
+BH.vectorD = new THREE.Vector3()
+BH.quaternionA = new THREE.Quaternion()
+BH.quaternionB = new THREE.Quaternion()
+BH.eulerA = new THREE.Euler()
 
+const BH_UTILS = {
+
+  vectorBetweenPoints: function(landmarks, index1, index2, returnVector) {
+    const vector1 = landmarks[index1]
+    const vector2 = landmarks[index2]
+
+    returnVector.subVectors(vector1, vector2)
+
+    return (returnVector)
+  },
+
+  // used for head.
+  orientBy4Points: function(el, landmarks, top, bottom, left, right) {
+
+    BH_UTILS.vectorBetweenPoints(landmarks, bottom, top, BH.vectorA)
+    BH.vectorA.normalize()
+
+    BH_UTILS.vectorBetweenPoints(landmarks, left, right, BH.vectorB)
+    BH.vectorB.normalize()
+
+    // get quaternion that makes the y-axis align
+    BH.vectorC.set(0, 1, 0)
+    BH.quaternionA.setFromUnitVectors(BH.vectorC, BH.vectorA)
+
+    // any further rotation needed to make X axis align?
+    BH.vectorC.set(1, 0, 0)
+    BH.vectorC.applyQuaternion(BH.quaternionA)
+
+    BH.quaternionB.setFromUnitVectors(BH.vectorC, BH.vectorB)
+
+    el.object3D.quaternion.multiplyQuaternions(BH.quaternionA,
+                                               BH.quaternionB)
+  },
+
+  // write this for the torso, but it is unused, torso only controlled by
+  // shoulders orientation, not hips, and assumed upright.
+  orientBy4Corners: function(el, landmarks, tl, tr, bl, br) {
+
+    // First get a vertical.
+    BH_UTILS.vectorBetweenPoints(landmarks, bl, tl, BH.vectorA)
+    BH_UTILS.vectorBetweenPoints(landmarks, br, tr, BH.vectorB)
+    BH.vectorC.addVectors(BH.vectorA, BH.vectorB).normalize()
+
+    // now get a horizontal
+    BH_UTILS.vectorBetweenPoints(landmarks, bl, br, BH.vectorA)
+    BH_UTILS.vectorBetweenPoints(landmarks, tl, tr, BH.vectorB)
+    BH.vectorD.addVectors(BH.vectorA, BH.vectorB).normalize()
+
+    // get quaternion that makes the y-axis align
+    BH.vectorA.set(0, 1, 0)
+    BH.quaternionA.setFromUnitVectors(BH.vectorA, BH.vectorC)
+
+    // any further rotation needed to make X axis align?
+    BH.vectorA.set(1, 0, 0)
+    BH.vectorA.applyQuaternion(BH.quaternionA)
+
+    BH.quaternionB.setFromUnitVectors(BH.vectorA, BH.vectorD)
+
+    el.object3D.quaternion.multiplyQuaternions(BH.quaternionA,
+                                               BH.quaternionB)
+  },
+
+  // orient a component by 2 ponts that are naturally on the Y axis.
+  // This accounts for the component having a parent.
+  orientBy2PointsY: function(el, landmarks, top, bottom, parent) {
+
+    if (parent) {
+      // get a quatenrnion representing the inverse of the parent's
+      // world rotation
+      BH.quaternionB.setFromRotationMatrix(parent.object3D.matrixWorld)
+      BH.quaternionB.invert()
+    }
+    else
+    {
+      BH.quaternionB.identity()
+    }
+
+    BH_UTILS.vectorBetweenPoints(landmarks, top, bottom, BH.vectorB)
+    BH.vectorB.normalize()
+    BH.vectorB.applyQuaternion(BH.quaternionB)
+
+    // get quaternion that makes the y axis (top to bottom)
+    // as modified by the parent's world rotation, align with the observed
+    // orientation
+    BH.vectorA.set(0, -1, 0)
+    BH.vectorA.applyQuaternion(BH.quaternionB)
+    BH.quaternionA.setFromUnitVectors(BH.vectorA, BH.vectorB)
+
+    // now represent quaternion A within the part's frame of reference.
+    el.object3D.quaternion.copy(BH.quaternionA)
+  },
+
+  // Orient a component based on 2 points that are naturally on the X axis.
+  // does not yet account for parents, so only usable for objects in
+  // world space.
+  orientBy2PointsX: function(el, landmarks, left, right) {
+
+    BH_UTILS.vectorBetweenPoints(landmarks, left, right, BH.vectorB)
+    BH.vectorB.normalize()
+
+    // get quaternion that makes the x axis (left to right)
+    // align with the observed orientation
+    BH.vectorA.set(-1, 0, 0)
+    el.object3D.quaternion.setFromUnitVectors(BH.vectorA, BH.vectorB)
+  }
+}
 
 // attach this to a cube, which will move in line with the head.
 AFRAME.registerComponent('block-head', {
@@ -73,26 +188,19 @@ AFRAME.registerComponent('block-head', {
 
   },
 
-  vectorBetweenPoints: function(index1, index2, returnVector) {
-    const vector1 = this.results.multiFaceLandmarks[0][index1]
-    const vector2 = this.results.multiFaceLandmarks[0][index2]
-
-    returnVector.subVectors(vector1, vector2)
-
-    return (returnVector)
-  },
-
   onResults: function(results) {
 
     this.results = results
 
     if (this.results.multiFaceLandmarks[0]) {
 
-      this.vectorBetweenPoints(LANDMARK_BOTTOM, LANDMARK_TOP, this.faceYAxis)
+      const landmarks = this.results.multiFaceLandmarks[0]
+
+      BH_UTILS.vectorBetweenPoints(landmarks, LANDMARK_BOTTOM, LANDMARK_TOP, this.faceYAxis)
       this.faceYLength = this.faceYAxis.length()
       this.faceYAxis.normalize()
 
-      this.vectorBetweenPoints(LANDMARK_LEFT, LANDMARK_RIGHT, this.faceXAxis)
+      BH_UTILS.vectorBetweenPoints(landmarks, LANDMARK_LEFT, LANDMARK_RIGHT, this.faceXAxis)
       this.faceXLength = this.faceXAxis.length()
       this.faceXAxis.normalize()
 
@@ -114,25 +222,25 @@ AFRAME.registerComponent('block-head', {
                       LANDMARK_RIGHT_EYE_TOP,
                       LANDMARK_RIGHT_EYE_BOTTOM)
 
-      // get quaternion that makes the y-axis align
-      this.vectorA.set(0, 1, 0)
-      this.quaternionA.setFromUnitVectors(this.vectorA, this.faceYAxis)
-
-      // any further rotation needed to make X axis align?
-
-      this.vectorA.set(1, 0, 0)
-      this.vectorA.applyQuaternion(this.quaternionA)
-
-      this.quaternionB.setFromUnitVectors(this.vectorA, this.faceXAxis)
-
-      this.el.object3D.quaternion.multiplyQuaternions(this.quaternionA,
-                                                      this.quaternionB)
-
-
-      //const material = this.el.getObject3D('mesh').material;
-      //material.map.magFilter = THREE.NearestFilter;
+      BH_UTILS.orientBy4Points(this.el,
+                               landmarks,
+                               LANDMARK_TOP,
+                               LANDMARK_BOTTOM,
+                               LANDMARK_LEFT,
+                               LANDMARK_RIGHT)
     }
   },
+
+  // to be retired.  Stil used by face animations...
+  vectorBetweenPoints: function(index1, index2, returnVector) {
+    const vector1 = this.results.multiFaceLandmarks[0][index1]
+    const vector2 = this.results.multiFaceLandmarks[0][index2]
+
+    returnVector.subVectors(vector1, vector2)
+
+    return (returnVector)
+  },
+
 
   animateMouth: function() {
 
@@ -302,6 +410,7 @@ AFRAME.registerComponent('pose', {
     // locate body parts.
     this.rArm = document.querySelector("#right-arm-rotator")
     this.lArm = document.querySelector("#left-arm-rotator")
+    this.body = document.querySelector("#body")
 
     //this.tick = AFRAME.utils.throttleTick(this.tick, 500, this);
     this.videoElement = document.getElementsByClassName('input_video')[0];
@@ -345,8 +454,12 @@ AFRAME.registerComponent('pose', {
 
     if (this.results.poseLandmarks) {
 
+      landmarks = this.results.poseLandmarks
+
       // cross over L & R from Google model, since we want the avatar to reflect
       // our movements.
+      const LANDMARK_L_HIP = 24
+      const LANDMARK_R_HIP = 23
       const LANDMARK_L_SHOULDER = 12
       const LANDMARK_L_ELBOW = 14
       const LANDMARK_L_WRIST = 16
@@ -355,19 +468,22 @@ AFRAME.registerComponent('pose', {
       const LANDMARK_R_WRIST = 15
 
       // left arm
-      this.rotateArm(this.lArm, LANDMARK_L_SHOULDER, LANDMARK_L_ELBOW)
-      this.rotateArm(this.rArm, LANDMARK_R_SHOULDER, LANDMARK_R_ELBOW)
+      BH_UTILS.orientBy2PointsY(this.lArm,
+                               landmarks,
+                               LANDMARK_L_SHOULDER,
+                               LANDMARK_L_ELBOW,
+                               this.body)
+      BH_UTILS.orientBy2PointsY(this.rArm,
+                               landmarks,
+                               LANDMARK_R_SHOULDER,
+                               LANDMARK_R_ELBOW,
+                               this.body)
 
+      // torso (body)
+      BH_UTILS.orientBy2PointsX(this.body,
+                                landmarks,
+                                LANDMARK_L_SHOULDER,
+                                LANDMARK_R_SHOULDER)
     }
   },
-
-  rotateArm(arm, shoulder, wrist) {
-
-    this.vectorBetweenPoints(wrist, shoulder, this.vectorB)
-    this.vectorB.normalize()
-
-    // get quaternion that makes the y axis align with the arm
-    this.vectorA.set(0, 1, 0)
-    arm.object3D.quaternion.setFromUnitVectors(this.vectorA, this.vectorB)
-  }
 });
