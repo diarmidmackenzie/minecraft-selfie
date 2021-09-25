@@ -188,17 +188,54 @@ AFRAME.registerComponent('block-head', {
 
 });
 
+// a net for a rectangle has the following components L-R
+// lower layer: left, front, right, back
+// top layer (in middle): top, bottom
+AFRAME.registerComponent('skin16-net', {
+  schema: {
+    bottomleft: {type: 'array', default: [0, 12]},
+    height: {type: 'number'},
+    width: {type: 'number'},
+    depth: {type: 'number'}
+  },
+
+  init() {
+    const units = 16
+    const x = Number(this.data.bottomleft[0])
+    const y = Number(this.data.bottomleft[1])
+    const height = this.data.height
+    const width = this.data.width
+    const depth = this.data.depth
+    const left = [x, y, x + depth, y + height]
+    const front = [left[2], left[1], left[2] + width, left[1] + height]
+    const right = [front[2], front[1], front[2] + depth, front[1] + height]
+    const back = [right[2], right[1], right[2] + width, right[1] + height]
+    const top = [left[2], left[3], left[2] + width, left[3] + depth]
+    const bottom = [front[2], front[3], front[2] + width, front[3] + depth]
+
+
+    this.el.setAttribute('box-uvs',
+                         {front: front.map(a => a/units),
+                          back: back.map(a => a/units),
+                          top: top.map(a => a/units),
+                          bottom: bottom.map(a => a/units),
+                          left: left.map(a => a/units),
+                          right: right.map(a => a/units)});
+  }
+});
+
+
 AFRAME.registerComponent('box-uvs', {
 
   // 4 values in each array are:
   //bottom left x, y, top left x, y.
   schema: {
-    front: {type: 'array', default: '0,0,1,1'},
-    back: {type: 'array', default: '0,0,1,1'},
-    top: {type: 'array', default: '0,0,1,1'},
-    bottom: {type: 'array', default: '0,0,1,1'},
-    left: {type: 'array', default: '0,0,1,1'},
-    right: {type: 'array', default: '0,0,1,1'}
+    front: {type: 'array', default: [0, 0, 1, 1]},
+    back: {type: 'array', default: [0, 0, 1, 1]},
+    top: {type: 'array', default: [0, 0, 1, 1]},
+    bottom: {type: 'array', default: [0, 0, 1, 1]},
+    left: {type: 'array', default: [0, 0, 1, 1]},
+    right: {type: 'array', default: [0, 0, 1, 1]}
   },
 
   init() {
