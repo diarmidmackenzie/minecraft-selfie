@@ -246,3 +246,91 @@ AFRAME.registerComponent('material-pixellated', {
     this.el.getObject3D('mesh').material = material;
   }
 });
+
+
+AFRAME.registerComponent('pose', {
+  schema: {
+    side: {type: 'string'} // "left" or "right"
+  },
+
+  init: function() {
+    this.rArmVector = new THREE.Vector3()
+
+    // used for working
+    this.vectorA = new THREE.Vector3(0, 0, 0)
+    this.vectorB = new THREE.Vector3(0, 0, 0)
+    this.quaternionA = new THREE.Quaternion()
+    this.quaternionB = new THREE.Quaternion()
+
+    // locate body parts.
+    this.rArm = document.querySelector("#right-arm-rotator")
+    this.lArm = document.querySelector("#left-arm-rotator")
+
+    //this.tick = AFRAME.utils.throttleTick(this.tick, 500, this);
+    this.videoElement = document.getElementsByClassName('input_video')[0];
+
+    this.pose = new Pose({locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }});
+    this.pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      smoothSegmentation: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    this.onResults = this.onResults.bind(this);
+    this.pose.onResults(this.onResults);
+
+    this.camera = new Camera(this.videoElement, {
+      onFrame: async () => {
+        await this.pose.send({image: this.videoElement});
+      },
+      //width: 1280,
+      //height: 720
+    });
+    this.camera.start();
+  },
+
+  vectorBetweenPoints: function(index1, index2, returnVector) {
+    const vector1 = this.results.poseLandmarks[index1]
+    const vector2 = this.results.poseLandmarks[index2]
+
+    returnVector.subVectors(vector1, vector2)
+
+    return (returnVector)
+  },
+
+  onResults: function(results) {
+
+    this.results = results
+
+    if (this.results.poseLandmarks) {
+
+      // cross over L & R from Google model, since we want the avatar to reflect
+      // our movements.
+      const LANDMARK_L_SHOULDER = 12
+      const LANDMARK_L_ELBOW = 14
+      const LANDMARK_L_WRIST = 16
+      const LANDMARK_R_SHOULDER = 11
+      const LANDMARK_R_ELBOW = 13
+      const LANDMARK_R_WRIST = 15
+
+      // left arm
+      this.rotateArm(this.lArm, LANDMARK_L_SHOULDER, LANDMARK_L_ELBOW)
+      this.rotateArm(this.rArm, LANDMARK_R_SHOULDER, LANDMARK_R_ELBOW)
+
+    }
+  },
+
+  rotateArm(arm, shoulder, wrist) {
+
+    this.vectorBetweenPoints(wrist, shoulder, this.vectorB)
+    this.vectorB.normalize()
+
+    // get quaternion that makes the y axis align with the arm
+    this.vectorA.set(0, 1, 0)
+    arm.object3D.quaternion.setFromUnitVectors(this.vectorA, this.vectorB)
+  }
+});
