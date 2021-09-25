@@ -6,6 +6,8 @@ Still very early days, but you can see demos of...
 - [Face tracking](https://diarmidmackenzie.github.io/minecraft-selfie/pages/index.html)
 - [Face & upper body tracking](https://diarmidmackenzie.github.io/minecraft-selfie/pages/body-pose.html)
 
+The motion tracking takes a little time to initialize -- 10 seconds or so, then you should see things leap into action.  If it's not working after 30+ seconds, try refreshing the page.
+
 The character stays in a fixed position, but you can use WASD + mouse to change your point of view.
 
 
