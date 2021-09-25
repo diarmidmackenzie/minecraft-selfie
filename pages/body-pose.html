@@ -11,7 +11,9 @@
   </head>
   <body>
     <div class="container">
-      <video class="input_video" style="display: none"></video>
+      <video class="input_video" style="position: absolute;
+                                        right:0;
+                                        transform: scale(-1, 1);"></video>
       <div class="canvas-container">
         <a-scene embedded stats renderer="colorManagement:true">
           <a-assets>
@@ -66,30 +68,58 @@
             <a-entity id="right-arm-rotator"
                       position="-0.5 0.5 0"
                       rotation="-10 0 0">
-              <a-box id="right arm" position ="-0.25 -0.5 0"
+              <a-box id="right arm" position ="-0.25 -0.125 0"
                              width="0.5"
-                             height="1.5"
+                             height="0.75"
                              depth="0.5"
-                             skin16-net = "bottomleft: 10, 8;
+                             skin16-net = "bottomleft: 10, 9.5;
                                            width: 1;
                                            depth: 1;
-                                           height: 3"
+                                           height: 1.5"
                              material-pixellated="src: #steve-skin">
               </a-box>
+              <a-entity id="right-forearm-rotator"
+                        position="-0.25 -0.5 0"
+                        rotation="0 0 0">
+                <a-box id="right forearm" position ="0 -0.25 0"
+                               width="0.5"
+                               height="0.75"
+                               depth="0.5"
+                               skin16-net = "bottomleft: 10, 8;
+                                             width: 1;
+                                             depth: 1;
+                                             height: 1"
+                               material-pixellated="src: #steve-skin">
+                </a-box>
+              </a-entity>
             </a-entity>
             <a-entity id="left-arm-rotator"
                       position="0.5 0.5 0"
                       rotation="-10 0 0">
-            <a-box id="left arm" position ="0.25 -0.5 0"
+            <a-box id="left arm" position ="0.25 -0.125 0"
                            width="0.5"
-                           height="1.5"
+                           height="0.75"
                            depth="0.5"
-                           skin16-net = "bottomleft: 8, 0;
+                           skin16-net = "bottomleft: 8, 1.5;
                                          width: 1;
                                          depth: 1;
-                                         height: 3"
+                                         height: 1.5"
                           material-pixellated="src: #steve-skin">
             </a-box>
+            <a-entity id="left-forearm-rotator"
+                      position="0.25 -0.5 0"
+                      rotation="0 0 0">
+              <a-box id="left-forearm" position ="0 -0.25 0"
+                             width="0.5"
+                             height="0.75"
+                             depth="0.5"
+                             skin16-net = "bottomleft: 8, 0;
+                                           width: 1;
+                                           depth: 1;
+                                           height: 1"
+                             material-pixellated="src: #steve-skin">
+              </a-box>
+            </a-entity>
           </a-box>
         </a-scene>
       </div>

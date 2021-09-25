@@ -19,6 +19,8 @@ LANDMARK_RIGHT_EYE_TOP = 386
 LANDMARK_RIGHT_EYE_BOTTOM = 374
 LANDMARK_RIGHT_EYEBROW = 296
 
+const VISIBILITY_THRESHOLD = 0.25
+
 // used in working.
 const BH = {}
 BH.vectorA = new THREE.Vector3()
@@ -42,6 +44,11 @@ const BH_UTILS = {
 
   // used for head.
   orientBy4Points: function(el, landmarks, top, bottom, left, right) {
+
+    if (landmarks[top].visibility < VISIBILITY_THRESHOLD) return;
+    if (landmarks[bottom].visibility < VISIBILITY_THRESHOLD) return;
+    if (landmarks[left].visibility < VISIBILITY_THRESHOLD) return;
+    if (landmarks[right].visibility < VISIBILITY_THRESHOLD) return;
 
     BH_UTILS.vectorBetweenPoints(landmarks, bottom, top, BH.vectorA)
     BH.vectorA.normalize()
@@ -93,13 +100,22 @@ const BH_UTILS = {
 
   // orient a component by 2 ponts that are naturally on the Y axis.
   // This accounts for the component having a parent.
+  // Illustrated with an example where parent = arm, child = fore-arm
+  // and arm is held 90 degrees foreward (zombie-like).
   orientBy2PointsY: function(el, landmarks, top, bottom, parent) {
+
+    // don't act on inaccurate information
+    if (landmarks[top].visibility < VISIBILITY_THRESHOLD) return;
+    if (landmarks[bottom].visibility < VISIBILITY_THRESHOLD) return;
 
     if (parent) {
       // get a quatenrnion representing the inverse of the parent's
       // world rotation
+
       BH.quaternionB.setFromRotationMatrix(parent.object3D.matrixWorld)
       BH.quaternionB.invert()
+
+      // Example: This is the rotation from zombie-arm to arm by side.
     }
     else
     {
@@ -110,14 +126,18 @@ const BH_UTILS = {
     BH.vectorB.normalize()
     BH.vectorB.applyQuaternion(BH.quaternionB)
 
+    // Example: the forearm was a horizontal forwwards vector.
+    // this transforms it into a down vector.
+
     // get quaternion that makes the y axis (top to bottom)
     // as modified by the parent's world rotation, align with the observed
-    // orientation
-    BH.vectorA.set(0, -1, 0)
-    BH.vectorA.applyQuaternion(BH.quaternionB)
-    BH.quaternionA.setFromUnitVectors(BH.vectorA, BH.vectorB)
+    // orientation.
 
-    // now represent quaternion A within the part's frame of reference.
+    BH.vectorA.set(0, -1, 0)
+    BH.quaternionA.setFromUnitVectors(BH.vectorA, BH.vectorB)
+    // Example: this is a zero transformation.
+
+    // Apply this quaternion to the object.
     el.object3D.quaternion.copy(BH.quaternionA)
   },
 
@@ -125,6 +145,11 @@ const BH_UTILS = {
   // does not yet account for parents, so only usable for objects in
   // world space.
   orientBy2PointsX: function(el, landmarks, left, right) {
+
+    // don't act on inaccurate information
+    if (landmarks[left].visibility < VISIBILITY_THRESHOLD) return;
+    if (landmarks[right].visibility < VISIBILITY_THRESHOLD) return;
+
 
     BH_UTILS.vectorBetweenPoints(landmarks, left, right, BH.vectorB)
     BH.vectorB.normalize()
@@ -252,11 +277,11 @@ AFRAME.registerComponent('block-head', {
     let width = this.vectorBetweenPoints(LANDMARK_MOUTH_LEFT,
                                          LANDMARK_MOUTH_RIGHT,
                                          this.vectorA).length()
-    width - width / this.faceXLength
+    width = width / this.faceXLength
 
     // apply scale factors to mouth (but with adjustments)
     this.mouth.object3D.scale.y = height - 0.06
-    this.mouth.object3D.scale.x = width * 6 - 0.2
+    this.mouth.object3D.scale.x = width * 2 - 0.55
   },
 
   animateEye: function(eye, pupil, top, bottom) {
@@ -410,6 +435,8 @@ AFRAME.registerComponent('pose', {
     // locate body parts.
     this.rArm = document.querySelector("#right-arm-rotator")
     this.lArm = document.querySelector("#left-arm-rotator")
+    this.rForearm = document.querySelector("#right-forearm-rotator")
+    this.lForearm = document.querySelector("#left-forearm-rotator")
     this.body = document.querySelector("#body")
 
     //this.tick = AFRAME.utils.throttleTick(this.tick, 500, this);
@@ -473,11 +500,25 @@ AFRAME.registerComponent('pose', {
                                LANDMARK_L_SHOULDER,
                                LANDMARK_L_ELBOW,
                                this.body)
+
+      BH_UTILS.orientBy2PointsY(this.lForearm,
+                                landmarks,
+                                LANDMARK_L_ELBOW,
+                                LANDMARK_L_WRIST,
+                                this.lArm)
+
+      // right arm
       BH_UTILS.orientBy2PointsY(this.rArm,
                                landmarks,
                                LANDMARK_R_SHOULDER,
                                LANDMARK_R_ELBOW,
                                this.body)
+
+      BH_UTILS.orientBy2PointsY(this.rForearm,
+                                landmarks,
+                                LANDMARK_R_ELBOW,
+                                LANDMARK_R_WRIST,
+                                this.rArm)
 
       // torso (body)
       BH_UTILS.orientBy2PointsX(this.body,
