@@ -105,8 +105,12 @@ const BH_UTILS = {
   orientBy2PointsY: function(el, landmarks, top, bottom, parent) {
 
     // don't act on inaccurate information
-    if (landmarks[top].visibility < VISIBILITY_THRESHOLD) return;
-    if (landmarks[bottom].visibility < VISIBILITY_THRESHOLD) return;
+    if ((landmarks[top].visibility < VISIBILITY_THRESHOLD) ||
+        (landmarks[bottom].visibility < VISIBILITY_THRESHOLD))
+    {
+      el.object3D.quaternion.identity()
+      return;
+    }
 
     if (parent) {
       // get a quatenrnion representing the inverse of the parent's
@@ -463,6 +467,8 @@ AFRAME.registerComponent('pose', {
     this.rForearm = document.querySelector("#right-forearm-rotator")
     this.lForearm = document.querySelector("#left-forearm-rotator")
     this.body = document.querySelector("#body")
+    this.lLeg = document.querySelector("#left-leg-rotator")
+    this.rLeg = document.querySelector("#right-leg-rotator")
 
     //this.tick = AFRAME.utils.throttleTick(this.tick, 500, this);
     this.videoElement = document.getElementsByClassName('input_video')[0];
@@ -518,6 +524,10 @@ AFRAME.registerComponent('pose', {
       const LANDMARK_R_SHOULDER = 11
       const LANDMARK_R_ELBOW = 13
       const LANDMARK_R_WRIST = 15
+      const LANDMARK_L_KNEE = 26
+      const LANDMARK_R_KNEE = 25
+      const LANDMARK_L_ANKLE = 28
+      const LANDMARK_R_ANKLE = 27
 
       // left arm
       BH_UTILS.orientBy2PointsY(this.lArm,
@@ -550,6 +560,19 @@ AFRAME.registerComponent('pose', {
                                 landmarks,
                                 LANDMARK_L_SHOULDER,
                                 LANDMARK_R_SHOULDER)
+
+      //left leg
+      BH_UTILS.orientBy2PointsY(this.lLeg,
+                               landmarks,
+                               LANDMARK_L_HIP,
+                               LANDMARK_L_KNEE,
+                               this.body)
+
+      BH_UTILS.orientBy2PointsY(this.rLeg,
+                                landmarks,
+                                LANDMARK_R_HIP,
+                                LANDMARK_R_KNEE,
+                                this.body)
     }
   },
 });
