@@ -1,3 +1,7 @@
+body, html {
+  font-family: var(--sl-font-sans)
+}
+
 .rs-base {
   left: auto;
   right: 5px;
@@ -21,4 +25,20 @@
 
 .card-image {
   max-width: 100px;
+  margin: 5px
+
+}
+
+sl-card::part(body) {
+  padding: 5px 0px;
+  text-align: center;
+}
+
+.settingsList {
+  display: flex;
+  flex-direction: column;
+}
+
+sl-checkbox {
+  margin: 5px;
 }

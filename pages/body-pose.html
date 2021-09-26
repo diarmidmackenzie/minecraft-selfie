@@ -16,7 +16,7 @@
   </head>
   <body>
     <div class="container">
-      <video class="input_video"></video>
+      <video id="input-video" class="input_video"></video>
       <div class="controls">
         <sl-drawer id="skins" label="Skins" placement="start">
           These are some settings to control skins
@@ -30,10 +30,6 @@
            src="../assets/minecraft/icons/skins.jpg">
            Skins
         </sl-card>
-        <!--<sl-button>
-          <img src="../assets/minecraft/icons/pickaxe.png"/>
-          Skins
-        </sl-button>-->
         <sl-drawer id="backgrounds" label="Backgrounds" placement="start">
           These are some settings to control backgrounds
           <p> Coming soon</p>
@@ -58,8 +54,15 @@
            Props
         </sl-card>
         <sl-drawer id="options" label="Options" placement="start">
-          These are some settings to control options
-          <p> Coming soon</p>
+          <div class='settingsList'>
+            <sl-checkbox id="video-feed-checkbox" checked>
+              Show video feed
+            </sl-checkbox>
+            <sl-checkbox id="perf-stats-checkbox" checked>
+              Show performance stats
+            </sl-checkbox>
+          </div>
+          <p> More options coming soon...</p>
           <sl-button slot="footer" type="primary">Close</sl-button>
         </sl-drawer>
         <sl-card class="card-image">
@@ -70,23 +73,8 @@
         </sl-card>
       </div>
 
-      <script>
-        function setUpDrawer(id) {
-          const drawer = document.querySelector(id);
-          const openButton = drawer.nextElementSibling;
-          const closeButton = drawer.querySelector('sl-button[type="primary"]');
-
-          openButton.addEventListener('click', () => drawer.show());
-          closeButton.addEventListener('click', () => drawer.hide());
-        }
-
-        setUpDrawer("#skins")
-        setUpDrawer("#backgrounds")
-        setUpDrawer("#props")
-        setUpDrawer("#options")
-      </script>
       <div class="canvas-container">
-        <a-scene embedded
+        <a-scene id="scene" embedded
                  stats
                  vr-mode-ui="enabled: false"
                  renderer="colorManagement:true">
@@ -232,5 +220,6 @@
         </a-scene>
       </div>
     </div>
+    <script src="../src/controls.js"></script>
   </body>
 </html>
