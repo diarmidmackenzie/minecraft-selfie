@@ -414,9 +414,34 @@ AFRAME.registerComponent('material-pixellated', {
       map: texture
     })
     this.el.getObject3D('mesh').material = material;
+
+    this.el.emit("pixel-material-loaded")
   }
 });
 
+
+AFRAME.registerComponent('share-material', {
+  schema: {
+    ref: { type: 'selector'}
+  },
+
+  init() {
+  },
+  update () {
+    // we need the reference's material to be initialized first
+    const mesh = this.data.ref.getObject3D('mesh')
+
+    if (!mesh) {
+        this.data.ref.addEventListener('pixel-material-loaded', e => {
+        this.update.call(this, this.data)
+        })
+        return;
+    }
+
+    const material = this.data.ref.getObject3D('mesh').material
+    this.el.getObject3D('mesh').material = material
+  }
+});
 
 AFRAME.registerComponent('pose', {
   schema: {
