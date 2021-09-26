@@ -19,8 +19,33 @@
       <video id="input-video" class="input_video"></video>
       <div class="controls">
         <sl-drawer id="skins" label="Skins" placement="start">
-          These are some settings to control skins
-          <p> Coming soon</p>
+          <sl-card id="skin-steve" class="card-image">
+           <img
+             slot="image"
+             src="../assets/minecraft/icons/skins/Steve.jpg">
+             Steve
+          </sl-card>
+          <sl-card id="skin-alex" class="card-image">
+           <img
+             slot="image"
+             src="../assets/minecraft/icons/skins/Alex.png">
+             Alex
+          </sl-card>
+          <sl-card id="skin-creeper" class="card-image">
+           <img
+             slot="image"
+             src="../assets/minecraft/icons/skins/creeper.png">
+             Creeper
+          </sl-card>
+          <sl-card id="skin-dantdm" class="card-image">
+           <img
+             slot="image"
+             src="../assets/minecraft/icons/skins/dantdm.png">
+             DanTDM
+          </sl-card>
+          <p>Coming soon...</p>
+          <p>You'll be able to upload your own skins</p>
+          <p>And I'll enable adjustment of eyes, mouth and eyebrows to better fit with different skins</p>
           <sl-button slot="footer" type="primary">Close</sl-button>
         </sl-drawer>
 
@@ -31,8 +56,8 @@
            Skins
         </sl-card>
         <sl-drawer id="backgrounds" label="Backgrounds" placement="start">
-          These are some settings to control backgrounds
-          <p> Coming soon</p>
+          <p> Coming soon...</p>
+          <p> You'll be able to choose from a range of backgrounds for your avatar</p>
           <sl-button slot="footer" type="primary">Close</sl-button>
         </sl-drawer>
         <sl-card class="card-image">
@@ -43,8 +68,8 @@
         </sl-card>
 
         <sl-drawer id="props" label="Props" placement="start">
-          These are some settings to control character props
-          <p> Coming soon</p>
+          <p> Coming soon...</p>
+          <p> You'll be able to add props like pickaxes and swords into your avatar's hands</p>
           <sl-button slot="footer" type="primary">Close</sl-button>
         </sl-drawer>
         <sl-card class="card-image">
@@ -76,10 +101,12 @@
       <div class="canvas-container">
         <a-scene id="scene" embedded
                  stats
-                 vr-mode-ui="enabled: false"
-                 renderer="colorManagement:true">
+                 vr-mode-ui="enabled: false">
           <a-assets>
             <img id="steve-skin" src="../assets/minecraft/skins/steve.png">
+            <img id="alex-skin" src="../assets/minecraft/skins/alex.png">
+            <img id="creeper-skin" src="../assets/minecraft/skins/creeper.png">
+            <img id="dantdm-skin" src="../assets/minecraft/skins/dantdm.png">
           </a-assets>
           <a-entity id="head-rotator"
                     position="0 1.1 -2"
@@ -90,9 +117,17 @@
                                            depth: 2;
                                            height: 2"
                              material-pixellated="src: #steve-skin">
+              <a-box id="headgear"
+                      skin16-net = "bottomleft: 8, 12;
+                                    width: 2;
+                                    depth: 2;
+                                    height: 2"
+                      share-material="ref:#head"
+                      scale="1.001 1.001 1.001">
+              </a-box>
               <a-box id="left-eye" position ="0.25 -0.05 0.5"
                                    scale="0.25 0.2 0.05"
-                                material="color:white">
+                                   material="color:white">
               </a-box>
               <a-box id="left-pupil" position ="0.25 -0.05 0.5"
                                      scale="0.05 0.05 0.06"
@@ -199,7 +234,7 @@
                                          width: 1;
                                          depth: 1;
                                          height: 3"
-                           material-pixellated="src: #steve-skin">
+                           share-material="ref:#head">
             </a-box>
           </a-entity>
           <a-entity id="left-leg-rotator"
@@ -213,7 +248,7 @@
                                          width: 1;
                                          depth: 1;
                                          height: 3"
-                          material-pixellated="src: #steve-skin">
+                          share-material="ref:#head">
             </a-box>
           </a-entity>
 

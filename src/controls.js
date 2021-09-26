@@ -17,6 +17,15 @@ function setUpCheckbox(id, target, checked, unchecked) {
                                                })
 }
 
+function setUpSkinSelector(id, skinid) {
+  const button = document.querySelector(id);
+  const head = document.querySelector("#head")
+
+  button.addEventListener('click', () => {
+                                            head.setAttribute("material-pixellated",
+                                                              `src: ${skinid}`);
+                                          })
+}
 
 setUpDrawer("#skins")
 setUpDrawer("#backgrounds")
@@ -31,3 +40,7 @@ setUpCheckbox("#perf-stats-checkbox",
               "#scene",
               (target) => (target.setAttribute("stats", "")),
               (target) => (target.removeAttribute("stats")))
+setUpSkinSelector("#skin-steve", "#steve-skin")
+setUpSkinSelector("#skin-alex", "#alex-skin")
+setUpSkinSelector("#skin-creeper", "#creeper-skin")
+setUpSkinSelector("#skin-dantdm", "#dantdm-skin")

@@ -407,20 +407,28 @@ AFRAME.registerComponent('material-pixellated', {
   },
 
   init() {
-  },
-  update () {
-    const texture = new THREE.TextureLoader().load(this.data.src.currentSrc)
-    texture.magFilter = THREE.NearestFilter;
+    this.loader = new THREE.TextureLoader()
+    this.texture = this.loader.load(this.data.src.currentSrc)
+    this.texture.magFilter = THREE.NearestFilter;
 
-    console.log(texture)
+    console.log(this.texture)
 
-    const material = new THREE.MeshStandardMaterial({
-      map: texture
+    this.material = new THREE.MeshStandardMaterial({
+      map: this.texture
     })
-    this.el.getObject3D('mesh').material = material;
+    this.material.alphaTest = 0.5;
+    this.material.transparent=true;
+    this.el.getObject3D('mesh').material = this.material;
 
     this.el.emit("pixel-material-loaded")
+  },
+
+  update () {
+    this.texture = this.loader.load(this.data.src.currentSrc)
+    this.texture.magFilter = THREE.NearestFilter
+    this.material.map = this.texture
   }
+
 });
 
 
